@@ -1,4 +1,4 @@
-console.log("Starting OPC UA server web frontend. Call it using http://<IP-ADDRESS:8080>");
+console.log("Starting OPC UA server web frontend. Call it using http://<netPI's ip address:8080> (or your mapped port instead of 8080");
 
 const listenport = 8080;
 

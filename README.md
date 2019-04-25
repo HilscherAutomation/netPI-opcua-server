@@ -65,7 +65,13 @@ STEP 1: Select your XML scheme file you want to upload and get compiled via the 
 
 STEP 2: Compile the final executeable OPC UA server. Click `Compile` to compile and combine your personal nodeset with the OPA UA base nodeset scheme to a whole.
 
-STEP 3: Press `Run` to start the OPA UA server. The server is getting immediately accessible for any OPC UA client over the URL `opc.tcp://<netPI's IP address:4840>`.
+STEP 3: Press `Run` to start the OPC UA server. The server is getting immediately accessible for any OPC UA client over the URL `opc.tcp://<netPI's IP address:4840>`.
+
+#### Example XML
+
+The container's GitHub source code repository includes a sample XML file in the folder /example/example.xml in case you have not a valid XML file at hand yourself. Use it for a simple test.
+
+The file configures a single boolean variable named `MynetPiVariable` that you set to `true` or `false` with your OPC UA Client.
 
 #### Automated build
 
