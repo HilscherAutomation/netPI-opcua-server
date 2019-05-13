@@ -1,8 +1,8 @@
 ## OPC UA Server
 
 [![](https://images.microbadger.com/badges/image/hilschernetpi/netpi-raspbian.svg)](https://microbadger.com/images/hilschernetpi/netpi-opcua-server "OPC UA Server")
-[![](https://images.microbadger.com/badges/commit/hilschernetpi/netpi-raspbian.svg)](https://microbadger.com/images/hilschernetpi//netpi-opcua-server "OPC US Server")
-[![Docker Registry](https://img.shields.io/docker/pulls/hilschernetpi/netpi-raspbian.svg)](https://registry.hub.docker.com/u/hilschernetpi/netpi-opcua-server/)&nbsp;
+[![](https://images.microbadger.com/badges/commit/hilschernetpi/netpi-raspbian.svg)](https://microbadger.com/images/hilschernetpi//netpi-opcua-server "OPC UA Server")
+[![Docker Registry](https://img.shields.io/docker/pulls/hilschernetpi/netpi-opcua-server.svg)](https://registry.hub.docker.com/u/hilschernetpi/netpi-opcua-server/)&nbsp;
 [![Image last updated](https://img.shields.io/badge/dynamic/json.svg?url=https://api.microbadger.com/v1/images/hilschernetpi/netpi-opcua-server&label=Image%20last%20updated&query=$.LastUpdated&colorB=007ec6)](http://microbadger.com/images/hilschernetpi/netpi-opcua-server "Image last updated")&nbsp;
 
 Made for [netPI](https://www.netiot.com/netpi/), the Raspberry Pi 3B Architecture based industrial suited Open Edge Connectivity Ecosystem
@@ -27,7 +27,7 @@ For remote login to the container across SSH the container's SSH port `22` needs
 
 To access the web application over a standard web browser the container's port `8080` needs to be mapped to any free netPI Host port.
 
-To access the OPA UA server over any OPC UA client the container's port `4840` needs to be mapped to netPI's Host port `4840`.
+To access the OPC UA server over any OPC UA client the container's port `4840` needs to be mapped to any free netPI's Host port.
 
 #### Getting started
 
@@ -42,7 +42,7 @@ Parameter | Value | Remark
 *Image* | **hilschernetpi/netpi-opcua-server**
 *Port mapping* | *host* **22** -> *container* **22** | *host*=any unused
 *Port mapping* | *host* **8080** -> *container* **8080** | *host*=any unused
-*Port mapping* | *host* **4840** -> *container* **4840** | 
+*Port mapping* | *host* **4840** -> *container* **4840** | *host*=any unused
 *Restart policy* | **always**
 
 STEP 4. Press the button *Actions > Start/Deploy container*
@@ -73,7 +73,7 @@ The container's GitHub source code repository includes a sample XML file in the 
 
 The file configures a single boolean variable named `MynetPiVariable` that you set to `true` or `false` with your OPC UA Client.
 
-#### Free OPC UA modeler to generate XML
+#### Free OPC UA modeler to generate XML file
 
 The [Free OPC UA Modeler](https://github.com/FreeOpcUa/opcua-modeler) is a tool for designing OPC UA Nodeset XML files. It is based on Python language and can run under Windows too.
 
@@ -91,15 +91,15 @@ STEP 6. Start the OPC UA modeler with the command `./opcua-modeler.exe`.
 
 STEP 7. In the opening application use the top menu bar and click `Actions\New Model` to prepare it for a new setup.
 
-STEP 8. Give your OPC UA server a reasonable name for your namespace table. Right click `NamespaceArray` in the middle left window and choose `Add Namespace`. In row `Value` line `1` enter a name e.g "myserver".
+STEP 8. Give your OPC UA server's namespace table a resonable name. Right click `NamespaceArray` in the middle left window and choose `Add Namespace`. In row `Value` line `1` enter a name e.g "myserver".
 
-STEP 9. Right click `Displayname\Root\Objects` in the window underneath and choose `Add Variable` to a  single variable to your nodeset.
+STEP 9. Right click `Displayname\Root\Objects` in the window underneath and choose `Add Variable` to add a  single variable to your nodeset.
 
 STEP 10. Change the variable's name from `NoName` to any value of your choice e.g. `myvar`, uncheck `Auto NodeId` checkbox, enter an object index behind `ns=0;i=` such as `1000` and finally click rightmost to specify the datatype e.g. `DisplayName\BaseDataType\Boolean` and finally confirm with `ok`.
 
 STEP 11. Add other variables in the same manner and then click `Actions\Save` to export the XML file.
 
-STEP 12. Import the XML file into the OPC UA server's web application
+STEP 12. Import the XML file into the containered OPC UA server's web application and compile your OPC UA server
 
 #### Automated build
 
