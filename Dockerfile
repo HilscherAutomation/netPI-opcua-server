@@ -16,7 +16,9 @@ RUN apt-get update \
     && apt-get install python-sphinx-rtd-theme
 
 #install open62541 stack and OPC UA schemes
-RUN git clone --recursive https://github.com/open62541/open62541
+RUN git clone --recursive https://github.com/open62541/open62541 \
+    && cd open62541 \
+    && git checkout -b 18april2019 f19a6a18396623eba89d87a729ec09a346c7981c
 
 #compile libopc library
 RUN cd open62541 \
