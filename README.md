@@ -61,7 +61,7 @@ Building the server and running it is a 3 step procedure.
 
 STEP 1: Select your XML scheme file you want to upload and get compiled via the Nodeset_Compiler. Click `Compile` after having selected the file. Compiling may take a while and depends mainly on the number of objects found in your XML file.
 
-(There are nodeset modeler softwares available free of charge on the web to generate and export an OPC UA XML nodeset files: [Siemens](https://support.industry.siemens.com/cs/document/109755133/siemens-opc-ua-modeling-editor-(siome)-for-implementing-opc-ua-companion-specifications?dti=0&lc=en-BH), [Unified Automation](https://www.unified-automation.com/downloads/opc-ua-development.html)).  
+(There are nodeset modeler softwares available free of charge on the web to generate and export an OPC UA XML nodeset files: [Siemens](https://support.industry.siemens.com/cs/document/109755133/siemens-opc-ua-modeling-editor-(siome)-for-implementing-opc-ua-companion-specifications?dti=0&lc=en-BH), [Unified Automation](https://www.unified-automation.com/downloads/opc-ua-development.html), [Free OPC UA modeler](https://github.com/FreeOpcUa/opcua-modeler)).  
 
 STEP 2: Compile the final executeable OPC UA server. Click `Compile` to compile and combine your personal nodeset with the OPA UA base nodeset scheme to a whole.
 
@@ -72,6 +72,34 @@ STEP 3: Press `Run` to start the OPC UA server. The server is getting immediatel
 The container's GitHub source code repository includes a sample XML file in the folder /example/example.xml in case you have not a valid XML file at hand yourself. Use it for a simple test.
 
 The file configures a single boolean variable named `MynetPiVariable` that you set to `true` or `false` with your OPC UA Client.
+
+#### Free OPC UA modeler to generate XML
+
+The [Free OPC UA Modeler](https://github.com/FreeOpcUa/opcua-modeler) is a tool for designing OPC UA Nodeset XML files. It is based on Python language and can run under Windows too.
+
+STEP 1: Install (Win)Python under Windows (tested with version WinPython_3.8) from [here](https://sourceforge.net/projects/winpython/files/). Remember the installation folder.
+
+STEP 2: Navigate with your Windows explorer to the installation folder, locate the executeable `WinPython Powershell Prompt.exe` and start it WITH!!! administrative rights.
+
+STEP 3: In the console enter `python -m pip install --upgrade pip` to install the python package management command `pip` in the latest version.
+
+STEP 4: Install the Free OPC UA modeler using the command `pip install opcua-modeler` in the same console.
+
+STEP 5: Navigate with the change dir command `cd` to the installed executeable OPC UA modeler in the folder `Script` e.g. `C:\Program Files\WPy64-3720\python-3.7.2.amd64\Scripts`.
+
+STEP 6. Start the OPC UA modeler with the command `./opcua-modeler.exe`.
+
+STEP 7. In the opening application use the top menu bar and click `Actions\New Model` to prepare it for a new setup.
+
+STEP 8. Give your OPC UA server a reasonable name for your namespace table. Right click `NamespaceArray` in the middle left window and choose `Add Namespace`. In row `Value` line `1` enter a name e.g "myserver".
+
+STEP 9. Right click `Displayname\Root\Objects` in the window underneath and choose `Add Variable` to a  single variable to your nodeset.
+
+STEP 10. Change the variable's name from `NoName` to any value of your choice e.g. `myvar`, uncheck `Auto NodeId` checkbox, enter an object index behind `ns=0;i=` such as `1000` and finally click rightmost to specify the datatype e.g. `DisplayName\BaseDataType\Boolean` and finally confirm with `ok`.
+
+STEP 11. Add other variables in the same manner and then click `Actions\Save` to export the XML file.
+
+STEP 12. Import the XML file into the OPC UA server's web application
 
 #### Automated build
 
