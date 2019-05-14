@@ -80,6 +80,7 @@ RUN apt-get update \
     && cd ./open62541/html \
     && npm install formidable \
     && npm install tree-kill \
+    && npm install find-process \
 
 #remove all unnecessary parts
     && rm -rf /tmp/* \

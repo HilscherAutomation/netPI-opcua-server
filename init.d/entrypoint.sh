@@ -16,6 +16,12 @@ trap 'kill ${!}; term_handler' SIGINT SIGKILL SIGTERM SIGQUIT SIGTSTP SIGSTOP SI
 echo "starting ssh ..."
 sudo /etc/init.d/ssh start
 
+
+if [ -f /open62541/html/server ]; then
+  echo "Starting last compiled server"
+  /open62541/html/server &	
+fi
+
 while true
 do
 # start the html application

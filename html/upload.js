@@ -1,4 +1,4 @@
-console.log("Starting OPC UA server web frontend. Call it using http://<netPI's ip address:8080> (or your mapped port instead of 8080");
+console.log("Starting OPC UA server web frontend. Call it using http://<netPI's ip address:8080> (or mapped port instead of 8080)");
 
 const listenport = 8080;
 
@@ -7,6 +7,8 @@ const http = require('http');
 const formidable = require('formidable');
 const fs = require('fs');
 const spawn = require("child_process").spawn;
+const find = require('find-process');
+
 
 // locals 
 var cOutput = './myNS';
@@ -36,6 +38,8 @@ http.createServer(function (req, res) {
           kill(xmlCompiler.pid);
           xmlCompiler = null;
         }
+
+        console.log("Generating server C code");
 
         // call the nodeset compiler python script
         xmlCompiler = spawn('python',["/open62541/tools/nodeset_compiler/nodeset_compiler.py",
@@ -82,36 +86,46 @@ http.createServer(function (req, res) {
 
     var result = '';
 
-    // if there is a child process already running kill it
-    if(Server !== null) {
-      kill(Server.pid);
-      Server = null;
-    }
+    // if there is a 'server' already running kill it
+    find('name', 'server').then(function (list) {
 
-    Server = spawn('./server');
+      if( list.length !== 0 ) {
+         if( list[0].pid !== null ) {
+          // kill running server 
+            kill( list[0].pid );
+          }
+      }
 
-    // collect all outputs coming from the c compiler
-    Server.stdout.on('data', function(data) {
-      result += '<p>'+data.toString()+'</p>';
-    } );
+      console.log("Starting the compiled server");
 
-    // collect all errors coming from the c compiler
-    Server.stderr.on('data', function(data) {
-      result += '<p>'+data.toString()+'</p>';
-    });
+      // spawn new server
+      Server = spawn('./server');
 
-    res.writeHead(200, {'Content-Type': 'text/html'});
-    res.write('<html>');
-      res.write('<body>');
-        res.write('<hr>');
-        res.write('<h3>Return to main page to upload a new XML file and to recompile and rerun the server.</h3>'); 
-        res.write('<form action="/" method="post" enctype="multipart/form-data">');
-        res.write('<input type="submit" value="Return">');
-        res.write('</form>');
-      res.write('</body>');
-    res.write('</html>');
+      // collect all outputs coming from the server
+      Server.stdout.on('data', function(data) {
+        console.log(data.toString());
+      } );
 
-    res.end();
+      // collect all errors coming from the server 
+      Server.stderr.on('data', function(data) {
+        console.log(data.toString());
+      });
+
+      res.writeHead(200, {'Content-Type': 'text/html'});
+      res.write('<html>');
+        res.write('<body>');
+          res.write('<hr>');
+          res.write('<h3>Return to main page to upload a new XML file and to recompile and rerun the server.</h3>'); 
+          res.write('<form action="/" method="post" enctype="multipart/form-data">');
+          res.write('<input type="submit" value="Return">');
+          res.write('</form>');
+        res.write('</body>');
+      res.write('</html>');
+      res.end();
+
+    }, function (err) {
+        console.log(err.stack || err);
+    })
 
   } else if (req.url == '/compile') {
 
@@ -122,6 +136,8 @@ http.createServer(function (req, res) {
       kill(cCompiler.pid);
       cCompiler = null;
     }
+
+    console.log("Compiling executeable server");
 
     // call the c compiler to compile the executable server
     cCompiler = spawn('gcc',["-std=c99",
