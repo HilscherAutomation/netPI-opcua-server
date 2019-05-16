@@ -15,15 +15,25 @@ RUN apt-get update \
     && apt-get install python-sphinx graphviz \
     && apt-get install python-sphinx-rtd-theme
 
-#install open62541 stack and OPC UA schemes
-RUN git clone --recursive https://github.com/open62541/open62541 \
-    && cd open62541 \
-    && git checkout -b 18april2019 f19a6a18396623eba89d87a729ec09a346c7981c
-
-#compile libopc library
-RUN cd open62541 \
+#compile the SSL library 
+RUN git clone https://github.com/ARMmbed/mbedtls --branch mbedtls-2.16.1 \
+    && cd mbedtls \
     && mkdir build \
     && cd build \
+    && cmake .. \
+    && make
+
+#install open62541 stack
+RUN git clone --recursive https://github.com/open62541/open62541 \
+    && cd open62541 \
+    && git checkout -b 14may2019 ffb69bf3a14c742a9b376d5ec479802d75ae6ce8 \
+    && mkdir build \
+    && mkdir build_encr \
+    && cd build_encr \
+    && cmake .. -DUA_NAMESPACE_ZERO=FULL -DCMAKE_BUILD_TYPE=Release -DUA_ENABLE_ENCRYPTION=ON -DMBEDTLS_INCLUDE_DIRS=/mbedtls/build/include \
+       -DMBEDTLS_LIBRARY=/mbedtls/build/library -DMBEDX509_LIBRARY=/mbedtls/build/library -DMBEDCRYPTO_LIBRARY=/mbedtls/build/library \
+    && make \
+    && cd ../build \
     && cmake .. -DUA_NAMESPACE_ZERO=FULL -DCMAKE_BUILD_TYPE=Release \
     && make
 
@@ -48,7 +58,7 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
 RUN [ "cross-build-start" ]
 
 #version
-ENV HILSCHERNETPI_OPCUA_SERVER_VERSION 1.0.0
+ENV HILSCHERNETPI_OPCUA_SERVER_VERSION 1.1.0
 
 #labeling
 LABEL maintainer="netpi@hilscher.com" \
@@ -56,33 +66,40 @@ LABEL maintainer="netpi@hilscher.com" \
       description="OPC UA Server"
 
 RUN apt-get update \
-    && apt-get install -y openssh-server build-essential curl python \
+    && apt-get install -y openssh-server build-essential curl python python-pip python-dev \
     && echo 'root:root' | chpasswd \
     && sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
     && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd \
-    && mkdir /var/run/sshd \
+    && mkdir /var/run/sshd 
+
+#install python tools
+RUN pip install --upgrade setuptools \
+    && pip install --upgrade wheel \
+    && pip install --upgrade netifaces
 
 # create all necessary folders
-    && mkdir -p ./open62541/html/ \
-    && mkdir -p ./open62541/deps/ua-nodeset/Schema \
+RUN mkdir -p ./open62541/html/ \
+    && mkdir -p ./mbedtls/build/library \
+    && mkdir -p ./mbedtls/build/include/mbedtls \
+    && mkdir -p ./open62541/deps/ua-nodeset/Schema/ \
     && mkdir -p ./open62541/tools/nodeset_compiler/ \
+    && mkdir -p ./open62541/tools/certs/ \
     && mkdir -p ./open62541/include/open62541/ \
     && mkdir -p ./open62541/plugins/include/ \
     && mkdir -p ./open62541/arch/ \
     && mkdir -p ./open62541/build/bin \
+    && mkdir -p ./open62541/build_encr/bin \
     && mkdir -p ./open62541/build/src_generated/ \
+    && mkdir -p ./open62541/build_encr/src_generated/ \
+    && mkdir -p ./open62541/examples/ 
 
-#install node.js 
-    && curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -  \
+#install node.js and npm modules
+RUN curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -  \
     && apt-get install -y nodejs \
-
-#install necessary npm modules
     && cd ./open62541/html \
     && npm install formidable \
     && npm install tree-kill \
     && npm install find-process \
-
-#remove all unnecessary parts
     && rm -rf /tmp/* \
     && rm -rf /var/lib/apt/lists/*
 
@@ -98,10 +115,15 @@ COPY --from=builder /open62541/plugins /open62541/plugins/
 COPY --from=builder /open62541/plugins/include /open62541/plugins/include/
 COPY --from=builder /open62541/include/open62541 /open62541/include/open62541/
 COPY --from=builder /open62541/arch /open62541/arch/
-COPY --from=builder /open62541/build /open62541/build/
 COPY --from=builder /open62541/build/bin /open62541/build/bin/
+COPY --from=builder /open62541/build_encr/bin /open62541/build_encr/bin/
 COPY --from=builder /open62541/build/src_generated /open62541/build/src_generated/
+COPY --from=builder /open62541/build_encr/src_generated /open62541/build_encr/src_generated/
 COPY --from=builder /open62541/tools/nodeset_compiler /open62541/tools/nodeset_compiler/
+COPY --from=builder /open62541/tools/certs /open62541/tools/certs/
+COPY --from=builder /open62541/examples/common.h /open62541/examples/common.h
+COPY --from=builder /mbedtls/build/library /mbedtls/build/library/
+COPY --from=builder /mbedtls/build/include/mbedtls /mbedtls/build/include/mbedtls/
 
 #set workdir
 WORKDIR /open62541/html/

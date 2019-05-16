@@ -13,21 +13,31 @@ term_handler() {
 # on callback, stop all started processes in term_handler
 trap 'kill ${!}; term_handler' SIGINT SIGKILL SIGTERM SIGQUIT SIGTSTP SIGSTOP SIGHUP
 
-echo "starting ssh ..."
+echo "Starting ssh ..."
 sudo /etc/init.d/ssh start
 
+# check if certs folder is mapped, else stop
+if [ -d "/certs" ]; then
 
-if [ -f /open62541/html/server ]; then
-  echo "Starting last compiled server"
-  /open62541/html/server &	
+  if [ ! -f /certs/server_cert.der ]; then
+    echo "No server certificate found. Creating server certificate and server key ..."
+    python /open62541/tools/certs/create_self-signed.py /certs
+  fi
+
+  if [ -f /open62541/html/server ]; then
+    echo "Starting last compiled server"
+    /open62541/html/server /certs/server_cert.der /certs/server_key.der &	
+  fi
+
+  while true
+  do
+    # start the html application
+    node /open62541/html/upload.js
+  done
+
+else
+  echo "/certs folder is not mapping into container"
 fi
-
-while true
-do
-# start the html application
-node /open62541/html/upload.js
-
-done
 
 # wait forever not to exit the container
 while true

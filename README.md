@@ -1,4 +1,4 @@
-## OPC UA Server
+## OPC UA Server (open62541)
 
 [![](https://images.microbadger.com/badges/image/hilschernetpi/netpi-raspbian.svg)](https://microbadger.com/images/hilschernetpi/netpi-opcua-server "OPC UA Server")
 [![](https://images.microbadger.com/badges/commit/hilschernetpi/netpi-raspbian.svg)](https://microbadger.com/images/hilschernetpi//netpi-opcua-server "OPC UA Server")
@@ -9,21 +9,23 @@ Made for [netPI](https://www.netiot.com/netpi/), the Raspberry Pi 3B Architectur
 
 ### OPC UA Server with compilable/changeable static nodeset
 
-The image provided hereunder deploys a container with installed Debian, node.js, Python, an OPC UA Library, an OPC UA XML Nodeset Compiler and a simple node.js based web application for compiling and running your personal OPC UA server instance based on a XML nodeset schema you handed over to it online. 
+The image provided hereunder deploys a container with installed Debian, node.js, Python, OPC UA Libraries (with/without encryption), the OPC UA XML Nodeset Compiler and a node.js based web GUI for compiling and deploying an OPC UA server instance based on a XML nodeset schema file uploaded online.
 
-Base of this image builds [debian](https://www.balena.io/docs/reference/base-images/base-images/) with enabled [SSH](https://en.wikipedia.org/wiki/Secure_Shell), preinstalled [node.js](https://nodejs.org/en/), [Python](https://www.python.org/), created user 'root' and installed [Open62541](https://open62541.org/) based precompiled OPC UA library allowing to run OPC UA server or client funtions natively. (The container uses the server functions only). The Python script based [Nodeset Compiler](https://open62541.org/doc/current/nodeset_compiler.html) allows the transformation of an OPC UA specification compliant XML nodeset schema to C code. The C coded output together with the [Base UANodeSet XML](https://github.com/Pro/UA-Nodeset/blob/59e75b2918b0edc16c8d057874afa7fbb8f0070f/Schema/Opc.Ua.NodeSet2.xml) builds the basis for the compilation of an executable OPC UA server program.   
+Base of this image builds [debian](https://www.balena.io/docs/reference/base-images/base-images/) with enabled [SSH](https://en.wikipedia.org/wiki/Secure_Shell), preinstalled [node.js](https://nodejs.org/en/), [Python](https://www.python.org/), created user 'root' and installed [Open62541](https://open62541.org/) based precompiled OPC UA libraries allowing to run OPC UA server or client funtions natively. (The container is using the server functions only). The Python script based [Nodeset Compiler](https://open62541.org/doc/current/nodeset_compiler.html) allows the transformation of an OPC UA specification compliant XML nodeset schema to C code. The C coded nodeset output builds the basis for compiling the OPC UA server executable.
 
-The web application frontend is node.js based and executed by the `upload.js` file in the folder `/open62541/html/`.
+The web GUI `upload.js` is node.js based and located in the folder `/open62541/html/`. In the same folder the source codes `server.c` and `server_encryption.c` are compiled online with the uploaded and transformed XML nodeset file to the final executeable OPC UA server.
 
-The very simple sample OPC UA server source code `server.c` that is compiled with the C coded and your transformed XML scheme file to the final executeable OPA UA server is located in the fole `/open62541/html/`.
-
-It needs to be mentioned here that the OPC UA server used in this reference implementation contains no security or certificate handling. For supporting these features the OPC UA library needs to be recompiled with the corresponding [build option](https://open62541.org/doc/current/building.html) and a certificate needs to be generated with e.g. [OpenSSL](https://www.openssl.org/) commands that can be imported to a OPC UA client.
+A server certificate and key are created during the container's first start. They are needed for secure TLS based OPC UA communication in case a secured OPC UA server is used. To store the files safely a additional volume needs to be mounted.
 
 #### Container prerequisites
 
+##### Volume mapping 
+
+To store the generated key and certificate a method is chosen to outsource them on a separate volume outside the container. The advantage: even if the container is removed the files remain on the sytem and could be reused if a new container instance is started. 
+
 ##### Port mapping
 
-For remote login to the container across SSH the container's SSH port `22` needs to be mapped to any free netPI Host port.
+For remote login to the container across SSH the container's SSH port `22` may be mapped to any free netPI Host port.
 
 To access the web application over a standard web browser the container's port `8080` needs to be mapped to any free netPI Host port.
 
@@ -35,37 +37,44 @@ STEP 1. Open netPI's website in your browser (https).
 
 STEP 2. Click the Docker tile to open the [Portainer.io](http://portainer.io/) Docker management user interface.
 
-STEP 3. Enter the following parameters under *Containers > + Add Container*
+STEP 3. Click *Volumes > + Add Volume*, name it *certs*, keep *Driver -> local* and click *Create the Volume* (one-time)
+
+STEP 4. Enter the following parameters under *Containers > + Add Container*
 
 Parameter | Value | Remark
 :---------|:------ |:------
 *Image* | **hilschernetpi/netpi-opcua-server**
-*Port mapping* | *host* **22** -> *container* **22** | *host*=any unused
-*Port mapping* | *host* **8080** -> *container* **8080** | *host*=any unused
-*Port mapping* | *host* **4840** -> *container* **4840** | *host*=any unused
+*Runtime > Port mapping* | *host* **22** -> *container* **22** | optional, *host*=any unused
+*Runtime > Port mapping* | *host* **8080** -> *container* **8080** | *host*=any unused
+*Runtime > Port mapping* | *host* **4840** -> *container* **4840** | *host*=any unused
+*Volumes > Volume mapping > map volume* | *container* **/certs** -> *volume* > **certs** |
 *Restart policy* | **always**
 
-STEP 4. Press the button *Actions > Start/Deploy container*
+STEP 5. Press the button *Actions > Start/Deploy container*
 
-Pulling the image may take a while (5-10mins). Sometimes it may take too long and a time out is indicated. In this case repeat STEP 4.
+Pulling the image may take a while (5-10mins). Sometimes it may take too long and a time out is indicated. In this case repeat STEP 5.
 
-#### Accessing
+#### Accessing SSH (optional)
 
-The container starts the SSH server automatically.
+The container starts the SSH server automatically. Open a terminal connection to it with an SSH client such as [putty](http://www.putty.org/) using netPI's IP address at your mapped port.
 
-If necessary login to it with an SSH client such as [putty](http://www.putty.org/) using netPI's IP address at port `22`. Use the credentials `root` as user and `root` as password when asked and you are logged in as root.
+Use the credentials `root` as user and `root` as password when asked and you are logged in as root.
 
-To access the container's web frontend application use netPI's ip address together with your mapped port (default 8080) in your browser e.g. http://<netPI's ip address:8080>.
+#### Accessing web GUI
 
-Building the server and running it is a 3 step procedure.
+To access the container's web GUI use netPI's ip address together with your mapped port (default 8080) in your browser e.g. http://<netPI's ip address:8080>.
 
-STEP 1: Select your XML scheme file you want to upload and get compiled via the Nodeset_Compiler. Click `Compile` after having selected the file. Compiling may take a while and depends mainly on the number of objects found in your XML file.
+Running and deploying the OPC UA server is a 3 step procedure:
+
+STEP 1: Select your XML nodeset file you want to upload and get compiled via the Nodeset_Compiler. Click `Compile` after having selected the file. Compiling may take a while and depends mainly on the number of objects found in your XML file.
 
 (There are nodeset modeler softwares available free of charge on the web to generate and export an OPC UA XML nodeset files: [Siemens](https://support.industry.siemens.com/cs/document/109755133/siemens-opc-ua-modeling-editor-(siome)-for-implementing-opc-ua-companion-specifications?dti=0&lc=en-BH), [Unified Automation](https://www.unified-automation.com/downloads/opc-ua-development.html), [Free OPC UA modeler](https://github.com/FreeOpcUa/opcua-modeler)).  
 
-STEP 2: Compile the final executeable OPC UA server. Click `Compile` to compile and combine your personal nodeset with the OPA UA base nodeset scheme to a whole.
+STEP 2: Compile the OPC UA server. Click `Compile unsecure` or `Compile secure` to compile it and to combine your nodeset to a final executeable.
 
-STEP 3: Press `Run` to start the OPC UA server. The server is getting immediately accessible for any OPC UA client over the URL `opc.tcp://<netPI's IP address:4840>`.
+STEP 3: Press `Run` to start the OPC UA server (unsecured/secured). The server is getting immediately accessible for any OPC UA client.
+
+If you repeat the procedure a currently running server is stopped and a new one spawned. If the container is restarted it checks for a previously compiled OPC UA server and starts it automatically.
 
 #### Example XML
 
