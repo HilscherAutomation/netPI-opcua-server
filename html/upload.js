@@ -1,4 +1,4 @@
-console.log("Starting OPC UA server web frontend. Call it using http://<netPI's ip address:8080> (or mapped port instead of 8080)");
+console.log("Starting OPC UA server web frontend. Call http://<netPI's ip address:port(default 8080)>");
 
 const listenport = 8080;
 
@@ -8,6 +8,7 @@ const formidable = require('formidable');
 const fs = require('fs');
 const spawn = require("child_process").spawn;
 const find = require('find-process');
+const url = require('url');
 
 
 // locals 
@@ -16,13 +17,92 @@ var xmlInput = cOutput +'.xml';
 var Server = null;
 var cCompiler = null;
 var xmlCompiler = null;
+var recreate = null;
+
 
 // create the http server 
 http.createServer(function (req, res) {
 
   // check the URL been requested and switch
 
-  if (req.url == '/generate') {
+  if(req.url.includes('/download')) {
+
+    var query = url.parse(req.url, true).query;
+
+    // read file and send it in the response
+    fs.readFile('/open62541/html/certs_copy/' + query.file, function (err, content) {
+      if (err) {
+        res.writeHead(400, {'Content-type':'text/html'})
+        res.end("No such file");
+      } else {
+        //specify Content will be an attachment
+        res.setHeader('Content-disposition', 'attachment; filename='+query.file);
+        res.end(content);
+      }
+    });
+  } else if(req.url == '/upload_cert' && req.method.toLowerCase() == 'post') {
+
+    var form = new formidable.IncomingForm();
+
+    form.parse(req)
+    .on('file', function (field, file) {
+
+      // copy public certificate from /tmp folder to destination folder
+      fs.copyFile(file.path, '/certs/server_cert.der', function(err) {
+        fs.copyFile(file.path, '/open62541/html/certs_copy/server_cert.der', function(err) {
+          console.log("New certificate sucessfully uploaded");
+        });
+      });
+
+    })
+    .on('end', function() {
+
+       res.end('<html><script>history.back()</script></html>');
+
+    });
+
+ } else if(req.url == '/upload_key' && req.method.toLowerCase() == 'post') {
+
+    var form = new formidable.IncomingForm();
+
+    form.parse(req)
+    .on('file', function (field, file) {
+
+      // copy private key from /tmp folder to destination folder
+      fs.copyFile(file.path, '/certs/server_key.der', function(err) {
+          console.log("New private key sucessfully uploaded");
+      });
+
+    })
+    .on('end', function() {
+
+       res.end('<html><script>history.back()</script></html>');
+
+    });
+  } else if (req.url == '/cert_recreate') {
+
+    // remove existing files
+    spawn('rm',["-r","/certs"] );
+    spawn('rm',["-r","/open62541/html/certs_copy/server_cert.der"] );
+
+    // call python script to create server certificate and private key
+    recreate = spawn('python',["/open62541/tools/certs/create_self-signed.py","/certs"]);
+
+    // when the python script ends, output http response
+    recreate.on('close', function (code) {
+
+      spawn('cp',["/certs/server_cert.der","/open62541/html/certs_copy/server_cert.der"] );
+
+      console.log("New Certificate Entity sucessfully created");
+
+      res.write('<html>');
+      res.write("<script>window.close();</script>");
+      res.write('</html>');
+      res.flush();
+      res.end();
+    });
+
+  } else  if (req.url == '/xml2c') {
 
     var form = new formidable.IncomingForm();
     form.parse(req, function (err, fields, files) {
@@ -70,11 +150,11 @@ http.createServer(function (req, res) {
             res.write('<body>');
               res.write(result);
               res.write('<hr>');
-              res.write('<h3>STEP 2: Compile OPC UA server</h3>'); 
-              res.write('<form action="compile" method="post" enctype="multipart/form-data">');
+              res.write('<h3>Compile OPC UA server</h3>'); 
+              res.write('<form action="c2opc" method="post" enctype="multipart/form-data">');
               res.write('<input type="submit" value="Compile unsecure server ...">');
               res.write('</form>');
-              res.write('<form action="compile_encr" method="post" enctype="multipart/form-data">');
+              res.write('<form action="c2opc_encr" method="post" enctype="multipart/form-data">');
               res.write('<input type="submit" value="Compile secure server ...">');
               res.write('</form>');
             res.write('</body>');
@@ -99,7 +179,7 @@ http.createServer(function (req, res) {
           }
       }
 
-      // spawn new server (hand over keys even if unsecred is started)
+      // spawn new server (hand over keys even if unsecured)
       Server = spawn('./server',["/certs/server_cert.der","/certs/server_key.der"]);
 
       // collect all outputs coming from the server
@@ -128,7 +208,7 @@ http.createServer(function (req, res) {
         console.log(err.stack || err);
     })
 
-  } else if (req.url == '/compile' || req.url == "/compile_encr" ) {
+  } else if (req.url == '/c2opc' || req.url == "/c2opc_encr" ) {
 
     var result = '';
 
@@ -140,7 +220,7 @@ http.createServer(function (req, res) {
 
     console.log("Compiling server");
 
-    if( req.url == "/compile" ) {
+    if( req.url == "/c2opc" ) {
       // call the c compiler to compile the unsecure server
       cCompiler = spawn('gcc',["-std=c99",
                         "-DUA_ARCHITECTURE_POSIX",
@@ -182,7 +262,7 @@ http.createServer(function (req, res) {
       result += '<p>'+data.toString()+'</p>';
     });
 
-    // if the c compiler is finished, output http response
+    // when the c compiler is finished, output http response
     cCompiler.on('close', function (code) {
       res.writeHead(200, {'Content-Type': 'text/html'});
       res.write('<html>');
@@ -190,13 +270,34 @@ http.createServer(function (req, res) {
           res.write('<h3>C Compiler logging output:</h3>');
         res.write('</head>');
         res.write('<body>');
+
           if (result == '') result = '<p>No errors</p>';
+
           res.write(result);
           res.write('<hr>');
-          res.write('<h3>STEP 3: Run and deploy server</h3>'); 
+          res.write('<h3>Deploy and run server</h3>'); 
           res.write('<form action="run" method="post" enctype="multipart/form-data">');
-          res.write('<input type="submit" value="Run">');
+          res.write('<input type="submit" value="Run ...">');
           res.write('</form>');
+
+          // in case encrypted server was chosen show additional options
+          if( req.url == "/c2opc_encr" ) {
+
+            res.write('<hr>');
+            res.write('<h3>Server Certificate Entity </h3>');
+            res.write('<input type="button" value="Download Certificate ..." onclick="window.open(\'/download/?file=server_cert.der\',\'_blank\')"><br><br>');
+            res.write('<input type="button" value="Create new Certificate Entity (certificate/key) ..." onclick="window.open(\'/cert_recreate\',\'_blank\')"><br><br>');
+            res.write('<form action="/upload_cert" enctype="multipart/form-data" method="post">'+
+                      '<input type="submit" value="Upload Certificate (.DER-coded) ...">'+
+                      '<input type="file" name="upload">'+
+                      '</form>');
+            res.write('<form action="/upload_key" enctype="multipart/form-data" method="post">'+
+                      '<input type="submit" value="Upload Private Key (.DER-coded) ...">'+
+                      '<input type="file" name="upload">'+
+                      '</form>');
+
+          }
+
         res.write('</body>');
       res.write('</html>');
       res.end();
@@ -209,10 +310,10 @@ http.createServer(function (req, res) {
     res.write('<html>');
       res.write('<hr>');
       res.write('<head>');
-      res.write('<h3>STEP 1: Compile OPC UA nodeset XML </h3>'); 
+      res.write('<h3>Compile OPC UA nodeset XML </h3>'); 
       res.write('</head>');
       res.write('<body>');
-        res.write('<form action="generate" method="post" enctype="multipart/form-data">');
+        res.write('<form action="xml2c" method="post" enctype="multipart/form-data">');
           res.write('<input type="file" accept=".xml" name="filetoupload"><br><br>');
           res.write('<input type="submit" value="Compile ...">');
         res.write('</form>');

@@ -78,7 +78,7 @@ RUN pip install --upgrade setuptools \
     && pip install --upgrade netifaces
 
 # create all necessary folders
-RUN mkdir -p ./open62541/html/ \
+RUN mkdir -p ./open62541/html/certs_copy \
     && mkdir -p ./mbedtls/build/library \
     && mkdir -p ./mbedtls/build/include/mbedtls \
     && mkdir -p ./open62541/deps/ua-nodeset/Schema/ \
@@ -100,6 +100,7 @@ RUN curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -  \
     && npm install formidable \
     && npm install tree-kill \
     && npm install find-process \
+    && npm install url \
     && rm -rf /tmp/* \
     && rm -rf /var/lib/apt/lists/*
 

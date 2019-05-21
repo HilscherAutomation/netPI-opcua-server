@@ -20,8 +20,13 @@ sudo /etc/init.d/ssh start
 if [ -d "/certs" ]; then
 
   if [ ! -f /certs/server_cert.der ]; then
-    echo "No server certificate found. Creating server certificate and server key ..."
+    echo "No server certificate found. Creating server certificate and private key ..."
     python /open62541/tools/certs/create_self-signed.py /certs
+  fi
+
+  #copy certificate for uploading purposes, without private key
+  if [ ! -f /open62541/html/certs_copy/server_cert.der ]; then
+    cp /certs/server_cert.der /open62541/html/certs_copy
   fi
 
   if [ -f /open62541/html/server ]; then
@@ -36,7 +41,7 @@ if [ -d "/certs" ]; then
   done
 
 else
-  echo "/certs folder is not mapping into container"
+  echo "/certs folder is not available"
 fi
 
 # wait forever not to exit the container

@@ -11,15 +11,15 @@ Made for [netPI](https://www.netiot.com/netpi/), the Raspberry Pi 3B Architectur
 
 The image provided hereunder deploys a container with installed Debian, node.js, Python, OPC UA Libraries (with/without encrypted messaging), an OPC UA XML Nodeset Compiler and a node.js based Web GUI that enables compiling and deploying an OPC UA server instance based on a XML nodeset schema file uploaded to it online.
 
-Base of this image builds [debian](https://www.balena.io/docs/reference/base-images/base-images/) with enabled [SSH](https://en.wikipedia.org/wiki/Secure_Shell), preinstalled [node.js](https://nodejs.org/en/), [Python](https://www.python.org/), created user 'root' and installed [Open62541](https://open62541.org/) based precompiled OPC UA libraries. The additional installed Python script based [XML Nodeset Compiler](https://open62541.org/doc/current/nodeset_compiler.html) transforms in a first step an uploaded OPC UA specification compliant XML nodeset schema to C code. In a second step this C coded nodeset output is compiled and linked online against a basic server source code to the final OPC UA server executable. The Web GUI creating `upload.js` is node.js based and located in the folder `/open62541/html/`. In the same folder the basic source codes `server.c` and `server_encryption.c`.
+Base of this image builds [debian](https://www.balena.io/docs/reference/base-images/base-images/) with enabled [SSH](https://en.wikipedia.org/wiki/Secure_Shell), preinstalled [node.js](https://nodejs.org/en/), [Python](https://www.python.org/), created user 'root' and installed [Open62541](https://open62541.org/) based precompiled OPC UA libraries. The additional installed Python script based [XML Nodeset Compiler](https://open62541.org/doc/current/nodeset_compiler.html) transforms in a first step an uploaded OPC UA specification compliant XML nodeset schema to C code. In a second step this C coded nodeset output is compiled and linked online against a basic server source code to the final OPC UA server executable. The Web GUI creating `upload.js` is node.js based and located in the folder `/open62541/html/`. In the same folder find the codebase `server.c` and `server_encryption.c`.
 
-For encrypted communication a server certificate and key files are created at first start.
+For encrypted communication a server certificate and a private key are created at first start.
 
 #### Container prerequisites
 
 ##### Volume mapping 
 
-To store the generated certificate and key safely a method is chosen to outsource them on a separate volume outside the container. The advantage: even if the container is removed the files remain on the system in this volume and if remapped are available in a new container instance again.
+To store the certificate and key safely a method is chosen to outsource them on a "separate" volume outside the container. The advantage: even if the container is removed the files remain on the system in this volume and if remapped are available in a new container instance again.
 
 ##### Port mapping
 
@@ -62,7 +62,7 @@ Use the credentials `root` as user and `root` as password when asked and you are
 
 To access the Web GUI use netPI's ip address together with your mapped port (default 8080) in your browser e.g. http://<netPI's ip address:8080>.
 
-To run an OPC UA server follow this procedure:
+To run thr OPC UA server follow this procedure:
 
 STEP 1: Select your XML nodeset file you want to upload and get compiled. Click `Compile ...` after having selected the file (may take a while). Watch the error log output on the next page.
 
@@ -70,7 +70,7 @@ STEP 1: Select your XML nodeset file you want to upload and get compiled. Click 
 
 STEP 2: Compile the OPC UA server. Click either `Compile unsecure ...` or `Compile secure ...` to start compilation. Watch the error log output on the next page.
 
-STEP 3: Press `Run` to start the OPC UA server.
+STEP 3: Press `Run ...` to start the OPC UA server.
 
 A repeated procedure will stop a currently running server while a new one is spawned. A container restart will automatically start the last compiled server.
 
