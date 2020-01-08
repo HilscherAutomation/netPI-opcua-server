@@ -2,7 +2,7 @@
 
 [![](https://images.microbadger.com/badges/image/hilschernetpi/netpi-opcua-server.svg)](https://microbadger.com/images/hilschernetpi/netpi-opcua-server "OPC UA Server")
 [![](https://images.microbadger.com/badges/commit/hilschernetpi/netpi-opcua-server.svg)](https://microbadger.com/images/hilschernetpi//netpi-opcua-server "OPC UA Server")
-[![Docker Registry](https://img.shields.io/docker/pulls/hilschernetpi/netpi-opcua-server.svg)](https://registry.hub.docker.com/u/hilschernetpi/netpi-opcua-server/)&nbsp;
+[![Docker Registry](https://img.shields.io/docker/pulls/hilschernetpi/netpi-opcua-server.svg)](https://registry.hub.docker.com/r/hilschernetpi/netpi-opcua-server/)&nbsp;
 [![Image last updated](https://img.shields.io/badge/dynamic/json.svg?url=https://api.microbadger.com/v1/images/hilschernetpi/netpi-opcua-server&label=Image%20last%20updated&query=$.LastUpdated&colorB=007ec6)](http://microbadger.com/images/hilschernetpi/netpi-opcua-server "Image last updated")&nbsp;
 
 Made for [netPI](https://www.netiot.com/netpi/), the Raspberry Pi 3B Architecture based industrial suited Open Edge Connectivity Ecosystem

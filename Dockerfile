@@ -1,14 +1,14 @@
 #STEP 1 of multistage build ---Compile opc ua library ---
 
 #use armv7hf compatible base image
-FROM balenalib/armv7hf-debian:stretch as builder
+FROM balenalib/armv7hf-debian:stretch-20191223 as builder
 
 #enable building ARM container on x86 machinery on the web (comment out next line if built on Raspberry)
 RUN [ "cross-build-start" ]
 
 #install tools for building the open64541 library
 RUN apt-get update \
-    && apt-get install git build-essential gcc pkg-config cmake python \
+    && apt-get install git build-essential gcc pkg-config cmake python wget \
     && apt-get install cmake-curses-gui \
     && apt-get install libmbedtls-dev \
     && apt-get install check \
@@ -24,9 +24,13 @@ RUN git clone https://github.com/ARMmbed/mbedtls --branch mbedtls-2.16.1 \
     && make
 
 #install open62541 stack
-RUN git clone --recursive https://github.com/open62541/open62541 \
-    && cd open62541 \
-    && git checkout -b 14may2019 ffb69bf3a14c742a9b376d5ec479802d75ae6ce8 \
+RUN wget https://github.com/open62541/open62541/archive/v1.0.tar.gz \
+    && tar -xvf v1.0.tar.gz \
+    && mkdir ./open62541-1.0/deps/ua-nodeset/Schema/ \
+    && wget https://github.com/OPCFoundation/UA-Nodeset/archive/UA-1.04.3-2019-09-09.tar.gz \
+    && tar -xvf UA-1.04.3-2019-09-09.tar.gz \
+    && cp UA-Nodeset-UA-1.04.3-2019-09-09/Schema/* ./open62541-1.0/deps/ua-nodeset/Schema/ \
+    && cd open62541-1.0 \
     && mkdir build \
     && mkdir build_encr \
     && cd build_encr \
@@ -43,7 +47,7 @@ RUN [ "cross-build-end" ]
 #STEP 2 of multistage build ----Create the final image-----
 
 #use armv7hf compatible base image
-FROM balenalib/armv7hf-debian:stretch
+FROM balenalib/armv7hf-debian:stretch-20191223
 
 #dynamic build arguments coming from the /hook/build file
 ARG BUILD_DATE
@@ -58,7 +62,7 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
 RUN [ "cross-build-start" ]
 
 #version
-ENV HILSCHERNETPI_OPCUA_SERVER_VERSION 1.1.0
+ENV HILSCHERNETPI_OPCUA_SERVER_VERSION 1.1.1
 
 #labeling
 LABEL maintainer="netpi@hilscher.com" \
@@ -94,7 +98,7 @@ RUN mkdir -p ./open62541/html/certs_copy \
     && mkdir -p ./open62541/examples/ 
 
 #install node.js and npm modules
-RUN curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -  \
+RUN curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -  \
     && apt-get install -y nodejs \
     && cd ./open62541/html \
     && npm install formidable \
@@ -108,21 +112,21 @@ RUN curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -  \
 COPY "./html/*.*" ./open62541/html/
 
 #copy include files and library from STEP 1 build
-COPY --from=builder /open62541/deps /open62541/deps/
-COPY --from=builder /open62541/deps/ua-nodeset /open62541/deps/ua-nodeset/
-COPY --from=builder /open62541/deps/ua-nodeset/Schema /open62541/deps/ua-nodeset/Schema/
-COPY --from=builder /open62541/deps /open62541/deps/
-COPY --from=builder /open62541/plugins /open62541/plugins/
-COPY --from=builder /open62541/plugins/include /open62541/plugins/include/
-COPY --from=builder /open62541/include/open62541 /open62541/include/open62541/
-COPY --from=builder /open62541/arch /open62541/arch/
-COPY --from=builder /open62541/build/bin /open62541/build/bin/
-COPY --from=builder /open62541/build_encr/bin /open62541/build_encr/bin/
-COPY --from=builder /open62541/build/src_generated /open62541/build/src_generated/
-COPY --from=builder /open62541/build_encr/src_generated /open62541/build_encr/src_generated/
-COPY --from=builder /open62541/tools/nodeset_compiler /open62541/tools/nodeset_compiler/
-COPY --from=builder /open62541/tools/certs /open62541/tools/certs/
-COPY --from=builder /open62541/examples/common.h /open62541/examples/common.h
+COPY --from=builder /open62541-1.0/deps /open62541/deps/
+COPY --from=builder /open62541-1.0/deps/ua-nodeset /open62541/deps/ua-nodeset/
+COPY --from=builder /open62541-1.0/deps/ua-nodeset/Schema /open62541/deps/ua-nodeset/Schema/
+COPY --from=builder /open62541-1.0/deps /open62541/deps/
+COPY --from=builder /open62541-1.0/plugins /open62541/plugins/
+COPY --from=builder /open62541-1.0/plugins/include /open62541/plugins/include/
+COPY --from=builder /open62541-1.0/include/open62541 /open62541/include/open62541/
+COPY --from=builder /open62541-1.0/arch /open62541/arch/
+COPY --from=builder /open62541-1.0/build/bin /open62541/build/bin/
+COPY --from=builder /open62541-1.0/build_encr/bin /open62541/build_encr/bin/
+COPY --from=builder /open62541-1.0/build/src_generated /open62541/build/src_generated/
+COPY --from=builder /open62541-1.0/build_encr/src_generated /open62541/build_encr/src_generated/
+COPY --from=builder /open62541-1.0/tools/nodeset_compiler /open62541/tools/nodeset_compiler/
+COPY --from=builder /open62541-1.0/tools/certs /open62541/tools/certs/
+COPY --from=builder /open62541-1.0/examples/common.h /open62541/examples/common.h
 COPY --from=builder /mbedtls/build/library /mbedtls/build/library/
 COPY --from=builder /mbedtls/build/include/mbedtls /mbedtls/build/include/mbedtls/
 

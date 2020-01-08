@@ -45,6 +45,10 @@ int main(int argc, char* argv[]) {
     for(size_t i = 0; i < trustListSize; i++)
         trustList[i] = loadFile(argv[i+3]);
 
+    /* Loading of a issuer list, not used in this application */
+    size_t issuerListSize = 0;
+    UA_ByteString *issuerList = NULL;
+
     /* Loading of a revocation list currently unsupported */
     UA_ByteString *revocationList = NULL;
     size_t revocationListSize = 0;
@@ -56,7 +60,9 @@ int main(int argc, char* argv[]) {
         UA_ServerConfig_setDefaultWithSecurityPolicies(config, 4840,
                                                        &certificate, &privateKey,
                                                        trustList, trustListSize,
+                                                       issuerList, issuerListSize,
                                                        revocationList, revocationListSize);
+
     UA_ByteString_clear(&certificate);
     UA_ByteString_clear(&privateKey);
     for(size_t i = 0; i < trustListSize; i++)
@@ -64,17 +70,18 @@ int main(int argc, char* argv[]) {
     if(retval != UA_STATUSCODE_GOOD)
         goto cleanup;
 
-	/* create nodes from nodeset */
+    /* create nodes from nodeset */
     if (myNS(server) != UA_STATUSCODE_GOOD) {
         UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "Could not add the example nodeset. "
             "Check previous output for any error.");
         retval = UA_STATUSCODE_BADUNEXPECTEDERROR;
     } else {
         retval = UA_Server_run(server, &running);
-    }	
+    }
 
  cleanup:
     UA_Server_delete(server);
     return retval == UA_STATUSCODE_GOOD ? EXIT_SUCCESS : EXIT_FAILURE;
 }
+
 
