@@ -3,9 +3,6 @@
 #use armv7hf compatible base image
 FROM balenalib/armv7hf-debian:stretch-20191223 as builder
 
-#enable building ARM container on x86 machinery on the web (comment out next line if built on Raspberry)
-RUN [ "cross-build-start" ]
-
 #install tools for building the open64541 library
 RUN apt-get update \
     && apt-get install git build-essential gcc pkg-config cmake python wget \
@@ -24,13 +21,13 @@ RUN git clone https://github.com/ARMmbed/mbedtls --branch mbedtls-2.16.1 \
     && make
 
 #install open62541 stack
-RUN wget https://github.com/open62541/open62541/archive/v1.0.tar.gz \
-    && tar -xvf v1.0.tar.gz \
-    && mkdir ./open62541-1.0/deps/ua-nodeset/Schema/ \
-    && wget https://github.com/OPCFoundation/UA-Nodeset/archive/UA-1.04.3-2019-09-09.tar.gz \
-    && tar -xvf UA-1.04.3-2019-09-09.tar.gz \
-    && cp UA-Nodeset-UA-1.04.3-2019-09-09/Schema/* ./open62541-1.0/deps/ua-nodeset/Schema/ \
-    && cd open62541-1.0 \
+RUN wget https://github.com/open62541/open62541/archive/v1.1-rc1.tar.gz \
+    && tar -xvf v1.1-rc1.tar.gz \
+    && mkdir ./open62541-1.1-rc1/deps/ua-nodeset/Schema/ \
+    && wget https://github.com/OPCFoundation/UA-Nodeset/archive/UA-1.04.6-2020-04-14.tar.gz \
+    && tar -xvf UA-1.04.6-2020-04-14.tar.gz \
+    && cp UA-Nodeset-UA-1.04.6-2020-04-14/Schema/* ./open62541-1.1-rc1/deps/ua-nodeset/Schema/ \
+    && cd open62541-1.1-rc1 \
     && mkdir build \
     && mkdir build_encr \
     && cd build_encr \
@@ -40,9 +37,6 @@ RUN wget https://github.com/open62541/open62541/archive/v1.0.tar.gz \
     && cd ../build \
     && cmake .. -DUA_NAMESPACE_ZERO=FULL -DCMAKE_BUILD_TYPE=Release \
     && make
-
-#stop processing ARM emulation (comment out next line if built on Raspberry)
-RUN [ "cross-build-end" ]
 
 #STEP 2 of multistage build ----Create the final image-----
 
@@ -58,11 +52,8 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.vcs-url="https://github.com/HilscherAutomation/netPI-opcua-server" \
       org.label-schema.vcs-ref=$VCS_REF
 
-#enable building ARM container on x86 machinery on the web (comment out next line if built on Raspberry)
-RUN [ "cross-build-start" ]
-
 #version
-ENV HILSCHERNETPI_OPCUA_SERVER_VERSION 1.1.1
+ENV HILSCHERNETPI_OPCUA_SERVER_VERSION 1.2.0
 
 #labeling
 LABEL maintainer="netpi@hilscher.com" \
@@ -70,11 +61,8 @@ LABEL maintainer="netpi@hilscher.com" \
       description="OPC UA Server"
 
 RUN apt-get update \
-    && apt-get install -y openssh-server build-essential curl python python-pip python-dev \
-    && echo 'root:root' | chpasswd \
-    && sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
-    && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd \
-    && mkdir /var/run/sshd 
+    && apt-get install -y build-essential curl python python-pip python-dev \
+    && echo 'root:root' | chpasswd
 
 #install python tools
 RUN pip install --upgrade setuptools \
@@ -112,21 +100,21 @@ RUN curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -  \
 COPY "./html/*.*" ./open62541/html/
 
 #copy include files and library from STEP 1 build
-COPY --from=builder /open62541-1.0/deps /open62541/deps/
-COPY --from=builder /open62541-1.0/deps/ua-nodeset /open62541/deps/ua-nodeset/
-COPY --from=builder /open62541-1.0/deps/ua-nodeset/Schema /open62541/deps/ua-nodeset/Schema/
-COPY --from=builder /open62541-1.0/deps /open62541/deps/
-COPY --from=builder /open62541-1.0/plugins /open62541/plugins/
-COPY --from=builder /open62541-1.0/plugins/include /open62541/plugins/include/
-COPY --from=builder /open62541-1.0/include/open62541 /open62541/include/open62541/
-COPY --from=builder /open62541-1.0/arch /open62541/arch/
-COPY --from=builder /open62541-1.0/build/bin /open62541/build/bin/
-COPY --from=builder /open62541-1.0/build_encr/bin /open62541/build_encr/bin/
-COPY --from=builder /open62541-1.0/build/src_generated /open62541/build/src_generated/
-COPY --from=builder /open62541-1.0/build_encr/src_generated /open62541/build_encr/src_generated/
-COPY --from=builder /open62541-1.0/tools/nodeset_compiler /open62541/tools/nodeset_compiler/
-COPY --from=builder /open62541-1.0/tools/certs /open62541/tools/certs/
-COPY --from=builder /open62541-1.0/examples/common.h /open62541/examples/common.h
+COPY --from=builder /open62541-1.1-rc1/deps /open62541/deps/
+COPY --from=builder /open62541-1.1-rc1/deps/ua-nodeset /open62541/deps/ua-nodeset/
+COPY --from=builder /open62541-1.1-rc1/deps/ua-nodeset/Schema /open62541/deps/ua-nodeset/Schema/
+COPY --from=builder /open62541-1.1-rc1/deps /open62541/deps/
+COPY --from=builder /open62541-1.1-rc1/plugins /open62541/plugins/
+COPY --from=builder /open62541-1.1-rc1/plugins/include /open62541/plugins/include/
+COPY --from=builder /open62541-1.1-rc1/include/open62541 /open62541/include/open62541/
+COPY --from=builder /open62541-1.1-rc1/arch /open62541/arch/
+COPY --from=builder /open62541-1.1-rc1/build/bin /open62541/build/bin/
+COPY --from=builder /open62541-1.1-rc1/build_encr/bin /open62541/build_encr/bin/
+COPY --from=builder /open62541-1.1-rc1/build/src_generated /open62541/build/src_generated/
+COPY --from=builder /open62541-1.1-rc1/build_encr/src_generated /open62541/build_encr/src_generated/
+COPY --from=builder /open62541-1.1-rc1/tools/nodeset_compiler /open62541/tools/nodeset_compiler/
+COPY --from=builder /open62541-1.1-rc1/tools/certs /open62541/tools/certs/
+COPY --from=builder /open62541-1.1-rc1/examples/common.h /open62541/examples/common.h
 COPY --from=builder /mbedtls/build/library /mbedtls/build/library/
 COPY --from=builder /mbedtls/build/include/mbedtls /mbedtls/build/include/mbedtls/
 
@@ -140,10 +128,8 @@ COPY "./init.d/*" /etc/init.d/
 ENTRYPOINT ["/etc/init.d/entrypoint.sh"]
 
 #Ports
-EXPOSE 22 4840 8080
+EXPOSE 4840 8080
 
 #set STOPSGINAL
 STOPSIGNAL SIGTERM
 
-#stop processing ARM emulation (comment out next line if built on Raspberry)
-RUN [ "cross-build-end" ]

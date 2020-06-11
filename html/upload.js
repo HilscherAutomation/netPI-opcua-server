@@ -1,4 +1,4 @@
-console.log("Starting OPC UA server web frontend. Call http://<netPI's ip address:port(default 8080)>");
+console.log("Starting OPC UA server web frontend. Call http://<Docker host's ip address:port(default 8080)>");
 
 const listenport = 8080;
 
@@ -226,6 +226,7 @@ http.createServer(function (req, res) {
                         "-DUA_ARCHITECTURE_POSIX",
                         "-I/open62541/build/",
                         "-I/open62541/include/",
+                        "-I/open62541/deps/",
                         "-I/open62541/build/src_generated/",
                         "-I/open62541/arch/",
                         "-I/open62541/plugins/include/",
@@ -240,6 +241,7 @@ http.createServer(function (req, res) {
                         "-DUA_ARCHITECTURE_POSIX",
                         "-I/open62541/build_encr/",
                         "-I/open62541/include/",
+                        "-I/open62541/deps/",
                         "-I/open62541/build_encr/src_generated/",
                         "-I/open62541/arch/",
                         "-I/open62541/plugins/include/",
@@ -285,14 +287,14 @@ http.createServer(function (req, res) {
 
             res.write('<hr>');
             res.write('<h3>Server Certificate Entity </h3>');
-            res.write('<input type="button" value="Download Certificate ..." onclick="window.open(\'/download/?file=server_cert.der\',\'_blank\')"><br><br>');
-            res.write('<input type="button" value="Create new Certificate Entity (certificate/key) ..." onclick="window.open(\'/cert_recreate\',\'_blank\')"><br><br>');
+            res.write('<input type="button" value="Download current Certificate ..." onclick="window.open(\'/download/?file=server_cert.der\',\'_blank\')"><br><br>');
+            res.write('<input type="button" value="Create new self signed Certificate Entity (certificate/key) ..." onclick="window.open(\'/cert_recreate\',\'_blank\')"><br><br>');
             res.write('<form action="/upload_cert" enctype="multipart/form-data" method="post">'+
-                      '<input type="submit" value="Upload Certificate (.DER-coded) ...">'+
+                      '<input type="submit" value="Upload own Certificate (.DER-coded) ...">'+
                       '<input type="file" name="upload">'+
                       '</form>');
             res.write('<form action="/upload_key" enctype="multipart/form-data" method="post">'+
-                      '<input type="submit" value="Upload Private Key (.DER-coded) ...">'+
+                      '<input type="submit" value="Upload own Private Key (.DER-coded) ...">'+
                       '<input type="file" name="upload">'+
                       '</form>');
 
