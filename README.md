@@ -89,7 +89,7 @@ A `docker-compose.yml` file could look like this
 
 The container starts the web based GUI automatically when deployed.
 
-To access the GUI use the Docker host's ip address together with your mapped port (default 8080) in your browser address field e.g. http://<Docker host ip address:8080>.
+To access the GUI use the Docker host's ip address together with your mapped port (default 8080) in your browser address field e.g. http://192.168.0.1:8080.
 
 Independent if the OPC UA server is seleted in the GUI to run securely or unsecurely the container will generate a self signed certificate and a public/private key pair if no files found. 
 
@@ -145,6 +145,10 @@ STEP 12. Add other variables in the same manner and then click `Actions\Save` to
 
 STEP 13. Import the XML file into the containered OPC UA server's web application and compile your OPC UA server
 
+### Open62541 License 
+
+The Open source implementation of OPC UA (OPC Unified Architecture) aka IEC 62541 is licensed under Mozilla Public License v2.0, see http://open62541.org
+
 ### License
 
 Copyright (c) Hilscher Gesellschaft fuer Systemautomation mbH. All rights reserved.
@@ -155,8 +159,5 @@ As for any pre-built image usage, it is the image user's responsibility to ensur
 
 [![N|Solid](http://www.hilscher.com/fileadmin/templates/doctima_2013/resources/Images/logo_hilscher.png)](http://www.hilscher.com)  Hilscher Gesellschaft fuer Systemautomation mbH  www.hilscher.com
 
-### Open62541 License 
 
-The Open source implementation of OPC UA (OPC Unified Architecture) aka IEC 62541 is licensed under Mozilla Public License v2.0, see http://open62541.org
 
-[![N|Solid](http://www.hilscher.com/fileadmin/templates/doctima_2013/resources/Images/logo_hilscher.png)](http://www.hilscher.com)  Hilscher Gesellschaft fuer Systemautomation mbH  www.hilscher.com
