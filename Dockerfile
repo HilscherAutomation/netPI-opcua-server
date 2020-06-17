@@ -53,7 +53,7 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.vcs-ref=$VCS_REF
 
 #version
-ENV HILSCHERNETPI_OPCUA_SERVER_VERSION 1.2.0
+ENV HILSCHERNETPI_OPCUA_SERVER_VERSION 1.2.1
 
 #labeling
 LABEL maintainer="netpi@hilscher.com" \

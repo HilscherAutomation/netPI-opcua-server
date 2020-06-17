@@ -107,63 +107,79 @@ http.createServer(function (req, res) {
     var form = new formidable.IncomingForm();
     form.parse(req, function (err, fields, files) {
 
-      // rename the temporary filename to static file name myNS
-      fs.rename(files.filetoupload.path, xmlInput, function (err) {
-        if (err) throw err;
+      if(files.filetoupload.name !== '' ) {
 
-        var result = '';
+        // rename the temporary filename to static file name myNS
+        fs.rename(files.filetoupload.path, xmlInput, function (err) {
+          if (err) throw err;
 
-        // if there is a child process already running kill it
-        if(xmlCompiler !== null) {
-          kill(xmlCompiler.pid);
-          xmlCompiler = null;
-        }
+          var result = '';
 
-        console.log("Compiling OPC UA nodeset XML");
+          // if there is a child process already running kill it
+          if(xmlCompiler !== null) {
+            kill(xmlCompiler.pid);
+            xmlCompiler = null;
+          }
 
-        // call the nodeset compiler python script
-        xmlCompiler = spawn('python',["/open62541/tools/nodeset_compiler/nodeset_compiler.py",
-                            "--types-array=UA_TYPES",
-                            "--existing",
-                            "/open62541/deps/ua-nodeset/Schema/Opc.Ua.NodeSet2.xml",
-                            "--xml",
-                            xmlInput,
-                            cOutput ] );
+          console.log("Compiling OPC UA nodeset XML");
 
-        // collect all outputs coming from the python script
-        xmlCompiler.stdout.on('data', function(data) {
-          result += '<p>'+data.toString()+'</p>';
-        } );
+          // call the nodeset compiler python script
+          xmlCompiler = spawn('python',["/open62541/tools/nodeset_compiler/nodeset_compiler.py",
+                              "--types-array=UA_TYPES",
+                              "--existing",
+                              "/open62541/deps/ua-nodeset/Schema/Opc.Ua.NodeSet2.xml",
+                              "--xml",
+                              xmlInput,
+                              cOutput ] );
 
-        // collect all errors coming from the python script
-        xmlCompiler.stderr.on('data', function(data) {
-           result += '<p>'+data.toString()+'</p>';
+          // collect all outputs coming from the python script
+          xmlCompiler.stdout.on('data', function(data) {
+            result += '<p>'+data.toString()+'</p>';
+          } );
+
+          // collect all errors coming from the python script
+          xmlCompiler.stderr.on('data', function(data) {
+             result += '<p>'+data.toString()+'</p>';
+          });
+
+          // if the python script ends, output http response
+  	  xmlCompiler.on('close', function (code) {
+            res.writeHead(200, {'Content-Type': 'text/html'});
+            res.write('<html>');
+              res.write('<head>');
+                res.write('<h3>Nodeset compiler logging output:</h3>');
+              res.write('</head>');
+              res.write('<body>');
+                res.write(result);
+                res.write('<hr>');
+                res.write('<h3>Compile OPC UA server</h3>'); 
+                res.write('<form action="c2opc" method="post" enctype="multipart/form-data">');
+                res.write('<input type="submit" value="Compile unsecure server ...">');
+                res.write('</form>');
+                res.write('<form action="c2opc_encr" method="post" enctype="multipart/form-data">');
+                res.write('<input type="submit" value="Compile secure server ...">');
+                res.write('</form>');
+              res.write('</body>');
+            res.write('</html>');
+
+            res.end();
+            xmlCompiler = null;
+          });
         });
-
-        // if the python script ends, output http response
-	xmlCompiler.on('close', function (code) {
-          res.writeHead(200, {'Content-Type': 'text/html'});
+      } else {
+        // no file specified
+        res.writeHead(200, {'Content-Type': 'text/html'});
           res.write('<html>');
-            res.write('<head>');
-              res.write('<h3>Nodeset compiler logging output:</h3>');
-            res.write('</head>');
             res.write('<body>');
-              res.write(result);
               res.write('<hr>');
-              res.write('<h3>Compile OPC UA server</h3>'); 
-              res.write('<form action="c2opc" method="post" enctype="multipart/form-data">');
-              res.write('<input type="submit" value="Compile unsecure server ...">');
-              res.write('</form>');
-              res.write('<form action="c2opc_encr" method="post" enctype="multipart/form-data">');
-              res.write('<input type="submit" value="Compile secure server ...">');
+              res.write('<h3>No file specified, return to main page.</h3>'); 
+              res.write('<form action="/" method="post" enctype="multipart/form-data">');
+                res.write('<input type="submit" value="Return">');
               res.write('</form>');
             res.write('</body>');
           res.write('</html>');
-
-          res.end();
-          xmlCompiler = null;
-        });
-      });
+        res.end();
+      }
     });
   } else if ( req.url == '/run' ) {
 
@@ -308,20 +324,33 @@ http.createServer(function (req, res) {
     });
 
   } else {
-    res.writeHead(200, {'Content-Type': 'text/html'});
-    res.write('<html>');
-      res.write('<hr>');
-      res.write('<head>');
-      res.write('<h3>Compile OPC UA nodeset XML </h3>'); 
-      res.write('</head>');
-      res.write('<body>');
-        res.write('<form action="xml2c" method="post" enctype="multipart/form-data">');
-          res.write('<input type="file" accept=".xml" name="filetoupload"><br><br>');
-          res.write('<input type="submit" value="Compile ...">');
-        res.write('</form>');
-      res.write('</body>');
-    res.write('</html>');
 
-    return res.end();
+    // if there is a 'server' already give a hint
+     find('name', 'server').then(function (list) {
+
+       res.writeHead(200, {'Content-Type': 'text/html'});
+       res.write('<html>');
+         res.write('<hr>');
+         res.write('<head>');
+         res.write('<h3>Compile OPC UA nodeset XML </h3>');
+         res.write('</head>');
+         res.write('<body>');
+           res.write('<form action="xml2c" method="post" enctype="multipart/form-data">');
+             res.write('<input type="file" accept=".xml" name="filetoupload"><br><br>');
+             res.write('<input type="submit" value="Compile ...">');
+           res.write('</form>');
+         res.write('</body>');
+
+         if( list.length !== 0 ) {
+           res.write('<br />Server status: running');
+         } else {
+           res.write('Server status: not running');
+         }
+
+         res.write('</html>');
+         res.end();
+      }, function (err) {
+         console.log(err.stack || err);
+      })
   }
 }).listen(listenport);

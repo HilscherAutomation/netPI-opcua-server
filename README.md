@@ -42,6 +42,8 @@ To access the OPC UA server with an OPC UA client the container's port `4840` ne
 
 ### Container deployments
 
+Pulling the image may take 10 minutes.
+
 #### netPI example
 
 STEP 1. Open netPI's web UI in your browser (https).
@@ -82,8 +84,6 @@ A `docker-compose.yml` file could look like this
          - 4840:4840
        volumes:
          - certs:/certs
-    volumes:
-     certs:
 
 ### Container access
 
@@ -105,7 +105,7 @@ STEP 3: Before you choose to compile the OPC UA server securely, you have the ch
 
 STEP 4: Press `Run ...` to start the OPC UA server.
 
-STEP 5: The server is getting accessible by any OPC UA client using the endpoint url `opc.tcp://<Docker host ip address>:<mapped Docker host port>` e.g. <opc.tcp://192.168.0.1:4840>
+STEP 5: The server is getting accessible by any OPC UA client using the endpoint url `opc.tcp://<Docker host ip address>:<mapped Docker host port>` e.g. `opc.tcp://192.168.0.1:4840`
 
 A repeated procedure will stop a currently running server while a new one is spawned. A container restart will automatically start the last compiled server.
 
