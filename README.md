@@ -1,11 +1,10 @@
 ## OPC UA Server (open62541)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![](https://images.microbadger.com/badges/commit/hilschernetpi/netpi-opcua-server.svg)](https://microbadger.com/images/hilschernetpi//netpi-opcua-server "OPC UA Server")
-[![Docker Registry](https://img.shields.io/docker/pulls/hilschernetpi/netpi-opcua-server.svg)](https://registry.hub.docker.com/r/hilschernetpi/netpi-opcua-server/)&nbsp;
-[![Image last updated](https://img.shields.io/badge/dynamic/json.svg?url=https://api.microbadger.com/v1/images/hilschernetpi/netpi-opcua-server&label=Image%20last%20updated&query=$.LastUpdated&colorB=007ec6)](http://microbadger.com/images/hilschernetpi/netpi-opcua-server "Image last updated")&nbsp;
-
 Made for Raspberry Pi 3B architecture based devices and compatibles
+
+### Docker repository
+
+https://hub.docker.com/r/hilschernetpi/netpi-opcua-server
 
 ### Container features
 
@@ -59,8 +58,8 @@ Parameter | Value | Remark
 *Image* | **hilschernetpi/netpi-opcua-server**
 *Port mapping* | *host* **8080** -> *container* **8080** | *host*=any unused
 *Port mapping* | *host* **4840** -> *container* **4840** | *host*=any unused
-*Volumes > Volume mapping > map volume* | *container* **/certs** -> *volume* **certs** |
-*Restart policy* | **always**
+*Adv.con.set. > Volumes > +map additional volume* | *container* **/certs** -> *volume* **certs** |
+*Adv.con.set. > Restart policy* | **always**
 
 STEP 6. Press the button *Actions > Start/Deploy container*
 
