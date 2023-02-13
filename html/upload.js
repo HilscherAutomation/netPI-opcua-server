@@ -107,10 +107,10 @@ http.createServer(function (req, res) {
     var form = new formidable.IncomingForm();
     form.parse(req, function (err, fields, files) {
 
-      if(files.filetoupload.name !== '' ) {
+      if(files.filetoupload) {
 
         // rename the temporary filename to static file name myNS
-        fs.rename(files.filetoupload.path, xmlInput, function (err) {
+        fs.rename(files.filetoupload.filepath, xmlInput, function (err) {
           if (err) throw err;
 
           var result = '';
